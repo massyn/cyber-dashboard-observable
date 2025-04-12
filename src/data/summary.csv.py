@@ -32,7 +32,38 @@ try:
         password=POSTGRES_PASSWORD
     ) as conn:
         # Use pandas to read the table
-        query = f"SELECT * FROM {TABLE_NAME};"
+
+        query = f'''with filtered_dates as (
+            select distinct datestamp
+                from {TABLE_NAME}
+                where datestamp >= date_trunc('day', current_date) - interval '12 months'
+            ),
+            ordered_dates as (
+                select datestamp,
+                    row_number() over (order by datestamp) as rn,
+                    count(*) over () as total
+                from filtered_dates
+            ),
+            selected_dates as (
+                select datestamp
+                from ordered_dates
+                where rn = 1
+                or rn = total
+                or rn in (
+                        floor(total * 1.0 / 11 * 1)::int,
+                        floor(total * 1.0 / 11 * 2)::int,
+                        floor(total * 1.0 / 11 * 3)::int,
+                        floor(total * 1.0 / 11 * 4)::int,
+                        floor(total * 1.0 / 11 * 5)::int,
+                        floor(total * 1.0 / 11 * 6)::int,
+                        floor(total * 1.0 / 11 * 7)::int,
+                        floor(total * 1.0 / 11 * 8)::int,
+                        floor(total * 1.0 / 11 * 9)::int,
+                        floor(total * 1.0 / 11 * 10)::int
+                )
+            )
+            SELECT * FROM {TABLE_NAME} inner join selected_dates on selected_dates.datestamp = {TABLE_NAME}.datestamp;'''
+
         df = pd.read_sql(query, conn)
 
         # Print DataFrame as CSV to stdout
