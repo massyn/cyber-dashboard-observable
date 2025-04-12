@@ -22,6 +22,11 @@ jobs:
               uses: actions/setup-node@v2
 
             - name: npm ci, build and test
+              env:
+                POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
+                POSTGRES_DATABASE: ${{ secrets.POSTGRES_DATABASE }}
+                POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+                POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
               run: |
                 npm ci
                 npm run build --if-present
