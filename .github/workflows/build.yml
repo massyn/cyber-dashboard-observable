@@ -27,15 +27,14 @@ jobs:
                 POSTGRES_DATABASE: ${{ secrets.POSTGRES_DATABASE }}
                 POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
                 POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+                
               run: |
                 npm ci
                 npm run build --if-present
-
-            - name: Publish to Cloudflare
-              uses: cloudflare/pages-action@v1
-              with:
-                apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-                accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-                projectName: ${{ secrets.CLOUDFLARE_PAGES }}
-                directory: 'dist'
-                gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+            - name: Uplaod to AWS S3
+              env:
+                AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                AWS_DEFAULT_REGION: ap-southeast-2
+                AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+              run: aws s3 sync $GITHUB_WORKSPACE s3://$AWS_S3_BUCKET --delete
